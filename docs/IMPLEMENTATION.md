@@ -1,5 +1,38 @@
 # Jenkins Implementation Diary
 
+
+## 🛠️ Task 0: Infrastructure Setup (Docker-in-Docker)
+
+Before building the Jenkins Controller, we had to set up the execution environment—the Docker Engine that Jenkins will use to run builds.
+
+### 0.1 Preparing the Network and Images
+First, we created a dedicated bridge network and pulled the necessary official images.
+~~~bash
+docker network create jenkins
+docker pull jenkins/jenkins
+docker pull docker:dind
+~~~
+
+### 0.2 Running the Docker Engine (Sidecar)
+We started the `jenkins-docker` container. This container acts as the actual "Daemon" that will execute the Docker commands sent by Jenkins.
+~~~bash
+docker run \
+  --name jenkins-docker \
+  --rm \
+  --detach \
+  --privileged \
+  --network jenkins \
+  --network-alias docker \
+  --env DOCKER_TLS_CERTDIR=/certs \
+  --volume jenkins-docker-certs:/certs/client \
+  --volume jenkins-data:/var/jenkins_home \
+  --publish 2376:2376 \
+  docker:dind \
+  --storage-driver overlay2
+~~~
+
+---
+
 ## 🛠️ Task 1: Resolving Outdated Dockerfile References
 
 The provided `Dockerfile` from the course materials was deprecated and caused immediate build failures. Below are the specific issues identified and the steps taken to resolve them.
@@ -74,7 +107,7 @@ This setup follows the **Docker-outside-of-Docker (DooD)** pattern. Jenkins is a
 
 ## 🖥️ Task 3: Initial Setup & Evidence
 
-Once the containers are healthy, the Jenkins UI is accessible at `http://localhost:8080`.
+Once the containers are healthy, the Jenkins UI is accessible at `http://localhost:8080` (or via <ip-address-vm:8080> on a VM).
 
 **Evidence: Initial Unlock Screen**
 To retrieve the initial administrator password required for the first login:
@@ -86,13 +119,27 @@ docker exec jenkins-blueocean cat /var/jenkins_home/secrets/initialAdminPassword
 
 ---
 
+## ⚙️ Task 4: Configuration & Finalization
+
+After logging in with the initial password, we followed these steps to finalize the environment:
+
+1. **Plugin Installation:** Selected "Install suggested plugins" to ensure basic pipeline functionality.
+2. **Admin User Creation:** Set up a personal admin account to replace the temporary initial password.
+3. **Dashboard Access:** Confirmed access to the main Jenkins dashboard.
+
+*(Insert Screenshot here: Jenkins Dashboard showing the "Create a job" button)*
+
+---
+
 ## 🛠️ Automation with Makefile
 
 To avoid manual errors and simplify the deployment, a Makefile was created to standardize the workflow:
 
-- `make build`: Rebuilds the modern Jenkins image.
-- `make run`:   Deploys the container with all network and volume mappings.
-- `make clean`: Removes the container to allow for a fresh start.
+- (1) `make setup`: Starts the engine: Creates the network and starts the `jenkins-docker` engine.
+- (2) `make build`: Rebuilds the Jenkins Dockerfile image.
+- (3) `make run`:   Starts Jenkins: Deploys the container with all network and volume mappings.
+- (4) `make login`  Prints the password to the terminal.
+- (5) `make clean`: Removes the container to allow for a fresh start.
 
 
 
@@ -103,11 +150,4 @@ To avoid manual errors and simplify the deployment, a Makefile was created to st
 
 
 
-
-
-## Setup jenkins
-
-after running teh above comamdn, we are able to visit `localhost:8080` (or on a vm <ip-address-vm:8080> 
-
-
-TODO: Put evidence in here - at least teh initial screen or so
+ 

@@ -1,19 +1,37 @@
-# Variables to avoid repeating yourself
+# Variables
 IMAGE_NAME = myjenkins-blueocean
 TAG = lts
-CONTAINER_NAME = jenkins-blueocean
+CONT_JENKINS = jenkins-blueocean
+CONT_DOCKER = jenkins-docker
 NETWORK = jenkins
 
-.PHONY: build run stop clean
+.PHONY: setup build run login stop clean
 
-# Build the custom Jenkins image
+# Task 0: Infrastructure Setup
+setup:
+	docker network create $(NETWORK) || true
+	docker run \
+	  --name $(CONT_DOCKER) \
+	  --rm \
+	  --detach \
+	  --privileged \
+	  --network $(NETWORK) \
+	  --network-alias docker \
+	  --env DOCKER_TLS_CERTDIR=/certs \
+	  --volume jenkins-docker-certs:/certs/client \
+	  --volume jenkins-data:/var/jenkins_home \
+	  --publish 2376:2376 \
+	  docker:dind \
+	  --storage-driver overlay2
+
+# Task 1: Build the custom Jenkins image
 build:
 	docker build -t $(IMAGE_NAME):$(TAG) .
 
-# Run the Jenkins container with all the complex networking
+# Task 2: Run the Jenkins container with all the complex networking
 run:
 	docker run \
-	  --name $(CONTAINER_NAME) \
+	  --name $(CONT_JENKINS) \
 	  --restart=on-failure \
 	  --detach \
 	  --network $(NETWORK) \
@@ -25,6 +43,12 @@ run:
 	  --volume jenkins-data:/var/jenkins_home \
 	  --volume jenkins-docker-certs:/certs/client:ro \
 	  $(IMAGE_NAME):$(TAG)
+
+# Task 3: Quick Login Helper
+login:
+	@docker exec $(CONT_JENKINS) cat /var/jenkins_home/secrets/initialAdminPassword
+
+# Cleanup 
 
 # Stop the container
 stop:
