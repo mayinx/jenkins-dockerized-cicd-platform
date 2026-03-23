@@ -14,7 +14,7 @@ The platform follows the **Docker-outside-of-Docker (DooD)** pattern, where the 
 ## 📖 Project Documentation
 For a deep dive into the engineering process, troubleshooting dependency gaps, and architectural decisions, please refer to the full implementation diary:
 
-👉 **[Detailed Implementation Diary](docs/implementation.md)**
+👉 **[Detailed Implementation Diary](/docs/IMPLEMENTATION.md)**
 
 ## 🚀 Quick Start
 To spin up the platform, ensure you have Docker installed and run:
