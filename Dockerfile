@@ -12,5 +12,6 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
 RUN apt-get update && apt-get install -y docker-ce-cli
 
 USER jenkins
-# Fixed: Removing specific versions allows the CLI to find the best fit for your Jenkins core
-RUN jenkins-plugin-cli --plugins "blueocean docker-workflow"
+# Fixed: Removing specific versions allows the CLI to find the best fit for your Jenkins core 
+# + added 'json-path-api' to satisfy the dependency chain for Blue Ocean
+RUN jenkins-plugin-cli --plugins "json-path-api blueocean docker-workflow"

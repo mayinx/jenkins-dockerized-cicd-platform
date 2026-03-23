@@ -10,19 +10,19 @@ NETWORK = jenkins
 # Task 0: Infrastructure Setup
 setup:
 	docker network create $(NETWORK) || true
-	docker run \
-	  --name $(CONT_DOCKER) \
-	  --rm \
-	  --detach \
-	  --privileged \
-	  --network $(NETWORK) \
-	  --network-alias docker \
-	  --env DOCKER_TLS_CERTDIR=/certs \
-	  --volume jenkins-docker-certs:/certs/client \
-	  --volume jenkins-data:/var/jenkins_home \
-	  --publish 2376:2376 \
-	  docker:dind \
-	  --storage-driver overlay2
+		docker run \
+		--name $(CONT_DOCKER) \
+		--rm \
+		--detach \
+		--privileged \
+		--network $(NETWORK) \
+		--network-alias docker \
+		--env DOCKER_TLS_CERTDIR=/certs \
+		--volume jenkins-docker-certs:/certs/client \
+		--volume jenkins-data:/var/jenkins_home \
+		--publish 2376:2376 \
+		docker:dind \
+		--storage-driver overlay2
 
 # Task 1: Build the custom Jenkins image
 build:
@@ -52,8 +52,8 @@ login:
 
 # Stop the container
 stop:
-	docker stop $(CONTAINER_NAME)
+	docker stop $(CONT_JENKINS) $(CONT_DOCKER) || true
 
 # Remove the container and start fresh (leaves volumes alone)
 clean:
-	docker rm -f $(CONTAINER_NAME)
+	docker rm -f $(CONT_JENKINS) $(CONT_DOCKER) || true
